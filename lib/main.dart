@@ -54,7 +54,7 @@ class _MyHomePageState extends State<MyHomePage> {
             children: <Widget>[
               const SizedBox(height: 30), // Add space from the top
               const SizedBox(height: 40), // Add space between title and letters
-              ScavengerHuntText(), // Use the ScavengerHuntText widget from header.dart
+              const ScavengerHuntText(), // Use the ScavengerHuntText widget from header.dart
               const SizedBox(height: 20), // Add space between text and counter
               const Text(
                 '',
@@ -70,16 +70,16 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   Image.asset(
                       'assets/image1.png'), // Replace 'assets/image1.png' with your image path
-                  SizedBox(height: 70), // Add space between images
+                  const SizedBox(height: 70), // Add space between images
                   Image.asset('assets/image2.png'),
                 ],
               ),
             ],
           ),
-          DiagonalWidget1(), // Diagonal widgets from header.dart
-          DiagonalWidget2(),
-          DiagonalWidget3(),
-          DiagonalWidget4(),
+          const DiagonalWidget1(), // Diagonal widgets from header.dart
+          const DiagonalWidget2(),
+          const DiagonalWidget3(),
+          const DiagonalWidget4(),
           Positioned(
             bottom: 150, // Adjust bottom position as needed
             left: 100,
@@ -89,7 +89,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 width: 50,
                 height: 50,
                 color: Colors.green, // Set color to green
-                child: Center(
+                child: const Center(
                   child: Text(
                     '3',
                     style: TextStyle(
@@ -111,7 +111,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 width: 50,
                 height: 50,
                 color: Colors.red, // Set color to red
-                child: Center(
+                child: const Center(
                   child: Text(
                     '9',
                     style: TextStyle(
@@ -132,8 +132,8 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Container(
                 width: 50,
                 height: 50,
-                color: Colors.blue, // Set color to blue
-                child: Center(
+                color: Colors.brown, // Set color to blue
+                child: const Center(
                   child: Text(
                     '1',
                     style: TextStyle(
@@ -155,7 +155,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 width: 50,
                 height: 50,
                 color: Colors.yellow, // Set color to yellow
-                child: Center(
+                child: const Center(
                   child: Text(
                     '4',
                     style: TextStyle(
@@ -175,32 +175,35 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  SizedBox(height: 20), // Add space between squares and buttons
+                  const SizedBox(
+                      height: 20), // Add space between squares and buttons
                   // Home button
                   ElevatedButton.icon(
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => HomeScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => const HomeScreen()),
                       );
                     },
                     style: ElevatedButton.styleFrom(
-                      // primary: const Color(0xFF9D2BB1),
-                      // onPrimary: Colors.white,
-                      minimumSize: const Size(
-                          200, 50), // Set minimum width and height for button
+
+                      foregroundColor: Colors.black, backgroundColor: const Color.fromRGBO(252, 170, 214, 1),
+                      minimumSize: const Size(300, 100), // Set minimum width and height for button
+
                     ),
-                    icon: Icon(Icons.home, size: 30), // Add icon to the button
-                    label: Text(
+                    icon: const Icon(Icons.home,
+                        size: 40), // Add icon to the button
+                    label: const Text(
                       'Home    ',
                       style: TextStyle(
                         fontFamily: 'Calibri',
-                        fontSize: 24,
+                        fontSize: 30,
                         fontWeight: FontWeight.bold, // Make the font bold
                       ),
                     ),
                   ),
-                  SizedBox(height: 60),
+                  const SizedBox(height: 60),
                 ],
               ),
             ),

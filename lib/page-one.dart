@@ -1,148 +1,452 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:scavanger_hunt/app_score.dart';
+import 'package:scavanger_hunt/page-two.dart';
 import 'header.dart';
 import 'background.dart';
+import 'home.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:scavanger_hunt/numbers.dart' as Numbers;
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:scavanger_hunt/app_language.dart';
+import 'dart:async';
 
 class PageOne extends StatefulWidget {
   @override
   _PageOneState createState() => _PageOneState();
 }
 
-class _PageOneState extends State<PageOne> {
+class _PageOneState extends State<PageOne> with SingleTickerProviderStateMixin {
+  Timer? _timer;
+  int _start = 60;
+
   int count = 0;
+  FlutterTts flutterTts = FlutterTts();
+  late AnimationController _controller;
+  late Animation<Offset> _offsetAnimation;
+  bool _isAnimationVisible = true;
+
+  Future<void> stage_finished() async {
+    speakMessage("You have found all occurrences of number 1");
+    print("AppScore");
+    print(AppScore().currentScore);
+  }
+
+  Future<void> speakMessage(String messageKey) async {
+    String languageCode = AppLanguage().currentLanguage;
+    String data =
+        await rootBundle.loadString('assets/texts/$languageCode.json');
+    Map<String, dynamic> texts = json.decode(data);
+    String message = texts[messageKey];
+    await flutterTts.setLanguage(languageCode);
+    await flutterTts.setPitch(1.0);
+    await flutterTts.speak(message);
+  }
+
+  Future<void> speakHint(String message) async {
+    await flutterTts.setLanguage("en-US");
+    await flutterTts.setPitch(1.0);
+    await flutterTts.speak(message);
+  }
+
+  Map<int, String> buttonToHint = {
+    0: "Reach me through ladder",
+    1: "I am hanging in water",
+    2: "I am on arms",
+    3: "Below the stone"
+  };
+  Map<int, bool> buttonClicked = {0: false, 1: false, 2: false, 3: false};
+
+  void resetCountAndButtons() {
+    setState(() {
+      count = 0;
+      buttonClicked = {0: false, 1: false, 2: false, 3: false};
+      resetTimer();
+      AppScore().setStageScore(1, 0);
+      AppScore().resetStageScore();
+    });
+  }
+
+  void resetTimer() {
+    _timer?.cancel();
+    _start = 60;
+    startTimer();
+  }
+
+  void startTimer() {
+    const oneSec = const Duration(seconds: 1);
+    _timer = Timer.periodic(
+      oneSec,
+      (Timer timer) {
+        if (_start == 0) {
+          setState(() {
+            count = 0; // Reset the counter
+            buttonClicked = {
+              0: false,
+              1: false,
+              2: false,
+              3: false
+            }; // Reset the buttons
+            timer.cancel();
+            resetTimer(); // Restart the timer
+          });
+        } else {
+          setState(() {
+            _start--;
+          });
+        }
+      },
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {
+        AppScore().setStageScore(1, 0);
+      });
+    });
+
+    // Initialize the animation controller and animation
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+    _offsetAnimation = Tween<Offset>(
+      begin: Offset(0.0, -1.0),
+      end: Offset(0.0, 0.0),
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut,
+    ));
+
+    // Start the animation and play the sound
+    _controller.forward().then((_) {
+      speakMessage("page_one_message");
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    int minutes = _start ~/ 60;
+    int seconds = _start % 60;
+    String formattedTime =
+        '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+    int scoreToDisplay = AppScore().currentScore;
     return Scaffold(
-      body: Stack(
-        children: [
-          BackgroundGradient(), // Use background from background.dart
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              const SizedBox(height: 20), // Add space from the top
-              const SizedBox(height: 60), // Add space between title and letters
-              ScavengerHuntText(), // Reusable Scavenger Hunt text
-              const SizedBox(height: 40), // Add space between text and images
-              // Add Image widget to display one.jpg
-              Image.asset(
-                'assets/one.jpg', // Path to the image asset
-                fit: BoxFit.fill, // Adjust the fit as needed
-                width: double.infinity, // Make the image take the full width
-                height: 780, // Set the height of the image
+      body: OrientationBuilder(
+        builder: (context, orientation) {
+          return Stack(
+            children: [
+              BackgroundGradient(),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: <Widget>[
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.07),
+                  Expanded(
+                    child: Image.asset(
+                      'assets/one.jpg',
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                    ),
+                  ),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.11),
+                ],
               ),
-              const SizedBox(height: 20), // Add space between images
-              // Add Image widget to display one.png
-              Image.asset(
-                'assets/one.png', // Path to the image asset
-                fit: BoxFit.cover, // Adjust the fit as needed
-                width: 70, // Make the image take the full width
-                height: 80, // Set the height of the image
+              Positioned(
+                bottom: MediaQuery.of(context).size.height * 0.028,
+                left: MediaQuery.of(context).size.width * 0.005,
+                child: Text(
+                  'Score : $scoreToDisplay',
+                  style: TextStyle(
+                    fontSize: 32,
+                    color: Colors.yellow,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-              const SizedBox(height: 10), // Add space between image and text
-              Text(
-                '$count/3',
+              Positioned(
+                bottom: MediaQuery.of(context).size.height * 0.02,
+                left: MediaQuery.of(context).size.width * 0.25,
+                child: Tooltip(
+                  message: 'Reset', // Tooltip message
+                  child: IconButton(
+                    icon: const Icon(
+                      Icons.refresh,
+                      size: 60,
+                    ),
+                    color: Colors.yellow,
+                    onPressed: resetCountAndButtons,
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: MediaQuery.of(context).size.height * 0.055,
+                left: MediaQuery.of(context).size.width * 0.40,
+                child: Image.asset(
+                  'assets/one.png',
+                  width: 60,
+                  height: MediaQuery.of(context).size.height * 0.05,
+                ),
+              ),
+              Positioned(
+                bottom: MediaQuery.of(context).size.height * 0.01,
+                left: MediaQuery.of(context).size.width * 0.40,
+                child: Text(
+                  '$count/4',
+                  style: const TextStyle(
+                    color: Colors.yellow,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 30,
+                  ),
+                ),
+              ),
+              Positioned(
+                bottom: MediaQuery.of(context).size.height * 0.02,
+                right: MediaQuery.of(context).size.width * 0.40,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.mic,
+                    size: 60,
+                  ),
+                  color: Colors.yellow,
+                  onPressed: () async {
+                    speakMessage("page_one_message");
+                  },
+                ),
+              ),
+              Positioned(
+                bottom: MediaQuery.of(context).size.height * 0.02,
+                right: MediaQuery.of(context).size.width * 0.25,
+                child: IconButton(
+                  icon: const Icon(
+                    Icons.lightbulb_outline,
+                    size: 60,
+                  ),
+                  color: Colors.yellow,
+                  onPressed: () async {
+                    if (allButtonsClicked()) {
+                      stage_finished();
+                    }
+                    // Speak the hint if the button hasn't been clicked
+                    for (int i = 0; i < buttonToHint.length; i++) {
+                      if (!buttonClicked[i]!) {
+                        await speakHint(buttonToHint[i]!);
+                        break;
+                      }
+                    }
+                  },
+                ),
+              ),
+              Positioned(
+                bottom: MediaQuery.of(context).size.height * 0.03,
+                right: MediaQuery.of(context).size.width * 0.08,
+                child: Text(
+                  '$formattedTime',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 36,
+                    color: Colors.yellow,
+                  ),
+                ),
+              ),
+              // Buttons positioned based on the device's orientation
+              Positioned(
+                top: MediaQuery.of(context).size.height * 0.10,
+                left: MediaQuery.of(context).size.width * 0.07,
+                child: buildButton(0),
+              ),
+              Positioned(
+                top: MediaQuery.of(context).size.height * 0.31,
+                right: MediaQuery.of(context).size.width * 0.40,
+                child: buildButton(1),
+              ),
+              Positioned(
+                bottom: MediaQuery.of(context).size.height * 0.35,
+                right: MediaQuery.of(context).size.width * 0.13,
+                child: buildButton(2),
+              ),
+              Positioned(
+                bottom: MediaQuery.of(context).size.height * 0.17,
+                right: MediaQuery.of(context).size.width * 0.40,
+                child: buildButton(3),
+              ),
+              Positioned(
+                top: MediaQuery.of(context).size.height * 0.02,
+                left: MediaQuery.of(context).size.width * 0.40,
+                child: const Text(
+                  'Find 1',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 40,
+                  ),
+                ),
+              ),
+              HomeWidget(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => Numbers.NumbersPage()),
+                  );
+                },
+              ),
+              MenuWidget(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  );
+                },
+              ),
+              ScoreWidget(),
+              LanguageWidget(),
+              // Animation Overlay
+              if (_isAnimationVisible)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black.withOpacity(0.5),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ClipOval(
+                          child: Container(
+                            width: MediaQuery.of(context).size.width * 0.5,
+                            height: MediaQuery.of(context).size.width * 0.5,
+                            child: SlideTransition(
+                              position: _offsetAnimation,
+                              child: Image.asset(
+                                'assets/one.png',
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _isAnimationVisible = false;
+                            });
+                            startTimer(); // Start the timer when OK is pressed
+                          },
+                          child: Text("OK"),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  bool allButtonsClicked() {
+    for (var entry in buttonClicked.entries) {
+      if (!entry.value) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  Widget buildButton(int index) {
+    return Material(
+      color: Colors.transparent,
+      child: Ink(
+        decoration: const ShapeDecoration(
+          color: Colors.transparent,
+          shape: CircleBorder(),
+        ),
+        child: IconButton(
+          icon: const Icon(Icons.circle),
+          color: Colors.transparent,
+          onPressed: () {
+            if (!buttonClicked[index]!) {
+              setState(() {
+                count++;
+                buttonClicked[index] = true;
+                AppScore().setStageScore(1, AppScore().getStageScore(1)! + 100);
+                if (count == 4) {
+                  _showStarsDialog();
+                  flutterTts.speak(
+                      "Congratulations!! You have found all occurrences of number 1");
+                  print("AppScore");
+                  print(AppScore().currentScore);
+                }
+              });
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  void _showStarsDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.blueGrey, // Change background color
+          title: Column(
+            children: [
+              const Text(
+                'Congratulations!',
                 style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
+                  color: Colors.yellow,
                   fontSize: 30,
+                ),
+              ),
+              Text(
+                'Your Score: ${AppScore().currentScore}',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 20,
                 ),
               ),
             ],
           ),
-          // Positioned widget for the microphone icon
-          Positioned(
-            top: 1040, // Adjust the top position of the microphone icon
-            left: 460, // Adjust the left position of the microphone icon
-            child: IconButton(
-              icon: Icon(
-                Icons.mic, // Use the microphone icon
-                size: 60, // Set the size of the icon
-              ),
+          content: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.star, color: Colors.yellow, size: 48),
+              SizedBox(width: 10), // Add space between stars
+              Icon(Icons.star, color: Colors.yellow, size: 48),
+              SizedBox(width: 10), // Add space between stars
+              Icon(Icons.star, color: Colors.yellow, size: 48),
+            ],
+          ),
+          actions: [
+            TextButton(
               onPressed: () {
-                // Handle microphone icon press here
-                // Add your logic for recording or any other action
+                Navigator.of(context).pop(); // Close the dialog
+                Navigator.push(
+                  // Navigate to PageTwo
+                  context,
+                  MaterialPageRoute(builder: (context) => PageTwo()),
+                );
               },
-            ),
-          ),
-          // Positioned widgets for buttons
-          Positioned(
-            top: 300, // Adjust the top position of the button
-            left: 50, // Adjust the left position of the button
-            child: Material(
-              color: Colors.transparent,
-              child: Ink(
-                decoration: ShapeDecoration(
-                  color: Colors.transparent,
-                  shape: CircleBorder(),
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.circle),
-                  color: Colors.transparent,
-                  onPressed: () {
-                    // Handle button press here
-                    setState(() {
-                      count++;
-                      if (count > 3) count = 3; // Limit count to 3
-                    });
-                  },
+              child: const Text(
+                'Next Level',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 18,
                 ),
               ),
             ),
-          ),
-          Positioned(
-            top: 480, // Adjust the top position of the button
-            left: 445, // Adjust the left position of the button
-            child: Material(
-              color: Colors.transparent,
-              child: Ink(
-                decoration: ShapeDecoration(
-                  color: Colors.transparent,
-                  shape: CircleBorder(),
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.circle),
-                  color: Colors.transparent,
-                  onPressed: () {
-                    // Handle button press here
-                    setState(() {
-                      count++;
-                      if (count > 3) count = 3; // Limit count to 3
-                    });
-                  },
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            top: 755, // Adjust the top position of the button
-            left: 675, // Adjust the left position of the button
-            child: Material(
-              color: Colors.transparent,
-              child: Ink(
-                decoration: ShapeDecoration(
-                  color: Colors.transparent,
-                  shape: CircleBorder(),
-                ),
-                child: IconButton(
-                  icon: Icon(Icons.circle),
-                  color: Colors.transparent,
-                  onPressed: () {
-                    // Handle button press here
-                    setState(() {
-                      count++;
-                      if (count > 3) count = 3; // Limit count to 3
-                    });
-                  },
-                ),
-              ),
-            ),
-          ),
-          DiagonalWidget1(), // Add diagonal widgets from header.dart
-          DiagonalWidget2(), // Add diagonal widgets from header.dart
-          DiagonalWidget3(), // Add diagonal widgets from header.dart
-          DiagonalWidget4(), // Add diagonal widgets from header.dart
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 }

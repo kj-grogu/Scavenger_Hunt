@@ -1,9 +1,12 @@
-import 'dart:math' as math;
+// ignore_for_file: prefer_const_literals_to_create_immutables
+
 import 'package:flutter/material.dart';
+import 'package:scavanger_hunt/match-sequence.dart';
+import 'package:scavanger_hunt/number-memory.dart';
 import 'header.dart';
 import 'numbers.dart'; // Import the NumbersPage
 import 'background.dart';
-
+import 'page-one.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -14,19 +17,37 @@ class HomeScreen extends StatelessWidget {
       body: Stack(
         children: [
           BackgroundGradient(), // Background from background.dart
+          // ignore: prefer_const_constructors
           Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               const SizedBox(height: 40), // Add space from the top
               const SizedBox(height: 40), // Add space between title and letters
-              ScavengerHuntText(), // Reusable Scavenger Hunt text
+              const ScavengerHuntText(), // Reusable Scavenger Hunt text
               const SizedBox(height: 20), // Add space between text and counter
             ],
           ),
-          DiagonalWidget1(), // Diagonal widgets from header.dart
-          DiagonalWidget2(),
-          DiagonalWidget3(),
-          DiagonalWidget4(),
+          const DiagonalWidget1(), // Diagonal widgets from header.dart
+          const DiagonalWidget2(),
+          const DiagonalWidget3(),
+          const DiagonalWidget4(),
+          HomeWidget(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+              ); // Handle home button press here
+            },
+          ),
+          MenuWidget(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) =>  HomeScreen()),
+              );// Handle home button press here
+            },
+          ),
+          LanguageWidget(),
           Positioned(
             top: 300, // Adjust top position as needed
             left: 0,
@@ -49,8 +70,8 @@ class HomeScreen extends StatelessWidget {
                           height: 300, // Set the height to adjust the size
                           width: 300, // Set the width to adjust the size
                         ),
-                        SizedBox(height: 1),
-                        Text(
+                        const SizedBox(height: 1),
+                        const Text(
                           'NUMBERS',
                           style: TextStyle(
                             color: Colors.black,
@@ -65,18 +86,22 @@ class HomeScreen extends StatelessWidget {
                 Expanded(
                   child: GestureDetector(
                     onTap: () {
-                      // Navigate to shapes page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => NumberMemoryGame()),
+                      );
                     },
                     child: Column(
                       children: [
                         Image.asset(
-                          'assets/shapes.png',
+                          'assets/flipcard.png',
                           height: 300, // Set the height to adjust the size
                           width: 300, // Set the width to adjust the size
                         ),
-                        SizedBox(height: 1),
-                        Text(
-                          'SHAPES',
+                        const SizedBox(height: 1),
+                        const Text(
+                          'Flip the Card',
                           style: TextStyle(
                             color: Colors.black,
                             fontSize: 40,
@@ -90,7 +115,7 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
           ),
-          SizedBox(height: 30), // Add space between rows
+          const SizedBox(height: 30), // Add space between rows
           Positioned(
             bottom: 150, // Adjust top position as needed
             left: 0,
@@ -103,18 +128,22 @@ class HomeScreen extends StatelessWidget {
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
-                        // Navigate to symbols page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => NumberSequenceQuiz()),
+                        );
                       },
                       child: Column(
                         children: [
                           Image.asset(
-                            'assets/symbols.png',
+                            'assets/sequence.png',
                             height: 300, // Set the height to adjust the size
                             width: 300, // Set the width to adjust the size
                           ),
-                          SizedBox(height: 10),
-                          Text(
-                            'SYMBOLS',
+                          const SizedBox(height: 10),
+                          const Text(
+                            'Number Sequence',
                             style: TextStyle(
                               color: Colors.black,
                               fontSize: 40,
